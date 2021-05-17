@@ -4,24 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import gym
+import torch
+
+from agents import RandomAgent, ActorCritic
+from data import TrajectoryDataset
+from models import WorldModel
 
 
-class RandomAgent(object):
-    def __init__(self, action_space):
-        self.action_space = action_space
-
-    def act(self, obs):
-        return self.action_space.sample()
-
-
-def evaluate_agent(env_id, agent, episode_count, seed, render):
-    env = gym.make(env_id)
-    env.seed(seed)
-    np.random.seed(seed)
-
-    agent = agent(env.action_space)
-
-    env.close()
+def evaluate_agent(env, agent, episode_count, render):
     for i in range(episode_count):
         episode_reward = 0
         done = False
@@ -36,7 +26,7 @@ def evaluate_agent(env_id, agent, episode_count, seed, render):
                 frames.append(img)
             if done:
                 break
-        print(f'Episode: {i+1}, reward: {episode_reward}')
+        print(f'Eval - Episode: {i+1}, reward: {episode_reward}')
         if render:
             fig = plt.figure()
 
@@ -55,18 +45,47 @@ def train(args):
     seed = args.seed
     render = args.render
 
-    # Prefill dataset
+    # device
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f'Using {device} device')
 
-    # Learn world model
+    # Preperation
+    env = gym.make(env_id)
+    env.seed(seed)
+    np.random.seed(seed)
 
-    # Train agent
+    agent = RandomAgent(env.action_space)
 
-    # Explore environment
+    dataset_size = int(2e4)
+    dataset = TrajectoryDataset(dataset_size)
+    n_prefill = int(2e3)
+    dataset.fill(env, agent, n_prefill)
+
+    n_latent = 600
+    n_p = 32
+    wm = WorldModel(n_latent, n_p, device)
+
+    # 1. Train world model
+    wm.train(dataset)
+
+    # 2. Train actor critic
+    agent = ActorCritic(env.action_space, device)
+
+    horizon = 5
+    init_state = wm.sample_state()
+    states, actions, rewards, discounts = wm.imagine(agent, init_state, horizon)
+    agent.train(states, actions, rewards, discounts)
+
+    # 3. Explore environment
+    n_fill = 4
+    dataset.fill(env, agent, n_fill, reset=False)
 
     # Evaluate agent
-    agent = RandomAgent
     episode_count = 1
-    evaluate_agent(env_id, agent, episode_count, seed, render)
+    evaluate_agent(env, agent, episode_count, render)
+
+    # Clean up
+    env.close()
 
 
 def parse_arg():
