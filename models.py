@@ -10,13 +10,14 @@ class WorldModel(object):
     def train(self, dataset):
         pass
 
-    def sample_state(self):
-        state = torch.zeros([self.n_latent + self.n_p], device=self.device)
+    def sample_state(self, n_sample):
+        state = torch.zeros([n_sample, self.n_latent + self.n_p], device=self.device)
         return state
 
     def imagine(self, agent, init_state, horizon):
-        states = torch.zeros([horizon, self.n_latent + self.n_p], device=self.device)
-        actions = torch.zeros([horizon], device=self.device)
-        rewards = torch.zeros([horizon], device=self.device)
-        discounts = torch.zeros([horizon], device=self.device)
+        n_trajectory = init_state.size()[0]
+        states = torch.zeros([n_trajectory, horizon, self.n_latent + self.n_p], device=self.device)
+        actions = torch.zeros([n_trajectory, horizon], device=self.device)
+        rewards = torch.zeros([n_trajectory, horizon], device=self.device)
+        discounts = torch.zeros([n_trajectory, horizon], device=self.device)
         return states, actions, rewards, discounts

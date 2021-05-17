@@ -59,7 +59,7 @@ def train(args):
     dataset_size = int(2e4)
     dataset = TrajectoryDataset(dataset_size)
     n_prefill = int(2e3)
-    dataset.fill(env, agent, n_prefill)
+    prev_obs = dataset.fill(env, agent, n_prefill)
 
     n_latent = 600
     n_p = 32
@@ -72,13 +72,14 @@ def train(args):
     agent = ActorCritic(env.action_space, device)
 
     horizon = 5
-    init_state = wm.sample_state()
+    n_sample = 1
+    init_state = wm.sample_state(n_sample)
     states, actions, rewards, discounts = wm.imagine(agent, init_state, horizon)
     agent.train(states, actions, rewards, discounts)
 
     # 3. Explore environment
     n_fill = 4
-    dataset.fill(env, agent, n_fill, reset=False)
+    prev_obs = dataset.fill(env, agent, n_fill, prev_obs=prev_obs)
 
     # Evaluate agent
     episode_count = 1
