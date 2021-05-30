@@ -1,3 +1,9 @@
+import numpy as np
+import torch
+import torch.optim as optim
+import torch.nn as nn
+import torch.nn.functional as F
+
 class RandomAgent(object):
     def __init__(self, action_space):
         self.action_space = action_space
@@ -18,3 +24,27 @@ class ActorCritic(object):
     def act(self, obs):
         action = self.action_space.sample()
         return action
+
+class ActorNetwork(nn.Module):
+    def __init__(
+      self, layers, num_of_actions, units, act):
+        print("init")
+        super(ActionHead, self).__init__()
+        self._layers = layers
+        self._num_of_actions = num_of_actions
+        self._act = act
+        self.fc = []
+        for i in range(layers -1):
+            self.fc.append(nn.Linear(units,units))
+        
+        self.fc.append(nn.Linear(units, num_of_actions))
+
+
+    #param: features(z)
+    #return: action distribution
+    def forward(self, features):
+        for i in range(self._layers - 1):
+            features = self._act(self.fc[i](features))
+        
+        out = F.softmax(self.fc[-1](fetures))
+        return out

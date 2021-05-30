@@ -1,8 +1,4 @@
-import numpy as np
 import torch
-import torch.optim as optim
-import torch.nn as nn
-import torch.nn.functional as F
 
 
 class WorldModel(object):
@@ -25,28 +21,3 @@ class WorldModel(object):
         rewards = torch.zeros([n_trajectory, horizon], device=self.device)
         discounts = torch.zeros([n_trajectory, horizon], device=self.device)
         return states, actions, rewards, discounts
-
-
-class ActorNetwork(nn.Module):
-    def __init__(
-      self, layers, num_of_actions, units, act):
-        print("init")
-        super(ActionHead, self).__init__()
-        self._layers = layers
-        self._num_of_actions = num_of_actions
-        self._act = act
-        self.fc = []
-        for i in range(layers -1):
-            self.fc.append(nn.Linear(units,units))
-        
-        self.fc.append(nn.Linear(units, num_of_actions))
-
-
-    #param: features(z)
-    #return: action distribution
-    def forward(self, features):
-        for i in range(self._layers - 1):
-            features = self._act(self.fc[i](features))
-        
-        out = F.softmax(self.fc[-1](fetures))
-        return out
