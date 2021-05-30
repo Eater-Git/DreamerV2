@@ -48,3 +48,29 @@ class ActorNetwork(nn.Module):
         
         out = F.softmax(self.fc[-1](fetures))
         return out
+
+class CriticNetwork(nn.Module):
+    def __init__(
+      self, input_size, layers, units, act):
+        print("init")
+        super(CriticNetwork, self).__init__()
+        self._layers = layers
+        self._inputsize = input_size
+        self._act = act
+        self.fc = []
+
+        self.fc.append(nn.Linear(input_size,units))
+        for i in range(layers -2):
+            self.fc.append(nn.Linear(units,units))
+        
+        self.fc.append(nn.Linear(units, 1))
+
+
+    #param: features(z)
+    #return: Value function
+    def forward(self, features):
+        for i in range(self._layers - 1):
+            features = self._act(self.fc[i](features))
+        
+        out = F.softmax(self.fc[-1](features))
+        return out
