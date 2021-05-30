@@ -46,7 +46,7 @@ class ActorNetwork(nn.Module):
         for i in range(self._layers - 1):
             features = self._act(self.fc[i](features))
         
-        out = F.softmax(self.fc[-1](fetures))
+        out = F.softmax(self.fc[-1](features))
         return out
 
 class CriticNetwork(nn.Module):
