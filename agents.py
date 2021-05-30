@@ -29,7 +29,7 @@ class ActorNetwork(nn.Module):
     def __init__(
       self, layers, num_of_actions, units, act):
         print("init")
-        super(ActionHead, self).__init__()
+        super(ActorNetwork, self).__init__()
         self._layers = layers
         self._num_of_actions = num_of_actions
         self._act = act
