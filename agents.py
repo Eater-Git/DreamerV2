@@ -25,6 +25,17 @@ class ActorCritic(object):
         action = self.action_space.sample()
         return action
 
+    #L(\psi) = E_p[\Sigma_{t=1}^{H-1}(-\rho\ln p_\psi(a^_t|z^_t)sg(V^\lambda_t - v_\xi(z^_t)) - (1-\rho)V^\lambda_t - \etaH[a_t|z^_t])]
+    def calcActorLoss(self):
+        pass
+
+    #L(\xi) = E_p[\Sigma_{t=1}^{H-1}1/2(v_\xi(z^_t) - sg(V^\lambda_t)))^2]
+    def calcCriticLoss(self):
+        pass
+
+    def accumulateValue(self):
+        pass
+
 class ActorNetwork(nn.Module):
     def __init__(
       self, layers, num_of_actions, units, act):
