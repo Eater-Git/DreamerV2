@@ -19,7 +19,13 @@ class ActorCritic(object):
         self.device = device
 
     def train(self, states, actions, rewards, discounts):
-        pass
+        values = accumulateValue(states, rewards, discounts)
+
+        critic_loss = calcCriticLoss(values, self.critic)
+        critic_loss.backward()
+
+        actor_loss = calcActorLoss(states, actions, values, self.critic)
+        actor_loss.backward()
 
     def act(self, obs):
         action = self.action_space.sample()
@@ -30,10 +36,10 @@ class ActorCritic(object):
         pass
 
     #L(\xi) = E_p[\Sigma_{t=1}^{H-1}1/2(v_\xi(z^_t) - sg(V^\lambda_t)))^2]
-    def calcCriticLoss(self):
+    def calcCriticLoss(self, states, actions, values, critic):
         pass
 
-    def accumulateValue(self):
+    def accumulateValue(self, states, rewards, discounts):
         pass
 
 class ActorNetwork(nn.Module):
