@@ -8,7 +8,14 @@ class WorldModel(object):
         self.device = device
 
     def train(self, dataset):
-        pass
+        n_batch = 50
+        sequence_len = 50
+        for _ in range(n_batch):
+            sequence = dataset.sample(sequence_len)
+            observations = sequence['observations']
+            actions = sequence['actions']
+            rewards = sequence['rewards']
+            discounts = sequence['discounts']
 
     def sample_state(self, n_sample):
         state = torch.zeros([n_sample, self.n_latent + self.n_p], device=self.device)

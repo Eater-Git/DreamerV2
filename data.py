@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def rollout_episode(env, agent, init_obs, step_lim):
     observations, actions, rewards, dones = [], [], [], []
 
@@ -21,11 +24,12 @@ class TrajectoryDataset(object):
         self.dataset_size = dataset_size
         self.discount_rate = discount_rate
         self.data = [None] * self.dataset_size
+        self.is_full = False
         self.data_idx = 0
         self.episode_terminals = []
 
     def __len__(self):
-        return len(self.data)
+        return self.dataset_size if self.is_full else self.data_idx
 
     def add_episode(self, observations, actions, rewards, dones):
         assert len(observations) == len(actions) == len(rewards) == len(dones)
@@ -36,6 +40,7 @@ class TrajectoryDataset(object):
         self.data_idx += episode_len
         self.episode_terminals.append(self.data_idx - 1)
         if self.data_idx >= self.dataset_size:
+            self.is_full = True
             n_overflow = self.data_idx - self.dataset_size
             self.data = self.data[n_overflow:]
             self.data_idx = 0
@@ -63,3 +68,22 @@ class TrajectoryDataset(object):
             obs = observations[-1]
 
         return obs
+
+    def sample(self, sequence_len):
+        sequence_start = np.random.randint(len(self))
+        sequence_stop = sequence_start + sequence_len - 1
+
+        episode_terminals = np.array(self.episode_terminals)
+        start_episode = np.where(episode_terminals - sequence_start >= 0)[0][0]
+        stop_episode = np.where(episode_terminals - sequence_stop >= 0)[0]
+        stop_episode = stop_episode[0] if (len(stop_episode) > 0) else (len(episode_terminals) + 1)
+        sequence_start = sequence_start if (start_episode == stop_episode) else (episode_terminals[start_episode] - sequence_len + 1)
+        sequence_data = self.data[sequence_start:sequence_start + sequence_len - 1]
+
+        sequence = {}
+        sequence['observations'] = sequence_data[:][0]
+        sequence['actions'] = sequence_data[:][1]
+        sequence['rewards'] = sequence_data[:][2]
+        sequence['discounts'] = sequence_data[:][3]
+
+        return sequence
