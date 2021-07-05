@@ -39,6 +39,7 @@ class ActorCritic(object):
     def calcCriticLoss(self, states, actions, values, critic):
         pass
 
+    #v_\xi
     def accumulateValue(self, states, rewards, discounts):
         pass
 
