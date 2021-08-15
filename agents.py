@@ -3,6 +3,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.distributions import Categorical
 
 class RandomAgent(object):
     def __init__(self, action_space):
@@ -14,9 +15,11 @@ class RandomAgent(object):
 
 
 class ActorCritic(object):
-    def __init__(self, action_space, device):
-        self.action_space = action_space
+    def __init__(self, layers,num_of_actions, units, act, device):
+        self.num_of_actions = num_of_actions
         self.device = device
+
+        self.actor = ActorNetwork(layers, num_of_actions, units, act)
 
     def train(self, states, actions, rewards, discounts):
         values = accumulateValue(states, rewards, discounts)
@@ -28,8 +31,9 @@ class ActorCritic(object):
         actor_loss.backward()
 
     def act(self, obs):
-        action = self.action_space.sample()
-        return action
+        m = Categorical(self.actor.forward(obs))
+        action = m.sample()
+        return action.item()
 
     #L(\psi) = E_p[\Sigma_{t=1}^{H-1}(-\rho\ln p_\psi(a^_t|z^_t)sg(V^\lambda_t - v_\xi(z^_t)) - (1-\rho)V^\lambda_t - \etaH[a_t|z^_t])]
     def calcActorLoss(self):
