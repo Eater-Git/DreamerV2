@@ -6,6 +6,16 @@ Reimplementation of the DreamerV2 agent in PyTorch. WIP.
 
 (To be populated)
 
+- python >= 3.6
+
+- tqdm
+- numpy
+- matplotlib
+- moviepy
+- torch == 1.7
+- tensorboard
+- gym[atari]
+
 ## Usage
 
 ```bash
