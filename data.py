@@ -58,9 +58,7 @@ class TrajectoryDataset(object):
             observations, actions, rewards, dones = rollout_episode(env, agent, init_obs, step_lim)
             episode_step = len(observations)
             total_step += episode_step
-            print(f'Fill - Episode Step: {episode_step}')
             self.add_episode(observations, actions, rewards, dones)
-        print(f'Fill - Total Step: {total_step}')
 
         if dones[-1]:
             obs = env.reset()
@@ -78,12 +76,12 @@ class TrajectoryDataset(object):
         stop_episode = np.where(episode_terminals - sequence_stop >= 0)[0]
         stop_episode = stop_episode[0] if (len(stop_episode) > 0) else (len(episode_terminals) + 1)
         sequence_start = sequence_start if (start_episode == stop_episode) else (episode_terminals[start_episode] - sequence_len + 1)
-        sequence_data = self.data[sequence_start:sequence_start + sequence_len - 1]
+        sequence_data = self.data[sequence_start:sequence_start + sequence_len]
 
         sequence = {}
-        sequence['observations'] = sequence_data[:][0]
-        sequence['actions'] = sequence_data[:][1]
-        sequence['rewards'] = sequence_data[:][2]
-        sequence['discounts'] = sequence_data[:][3]
+        sequence['observations'] = [sd[0] for sd in sequence_data]
+        sequence['actions'] = [sd[1] for sd in sequence_data]
+        sequence['rewards'] = [sd[2] for sd in sequence_data]
+        sequence['discounts'] = [sd[3] for sd in sequence_data]
 
         return sequence
