@@ -36,12 +36,40 @@ class ActorCritic(object):
         return action.item()
 
     #L(\psi) = E_p[\Sigma_{t=1}^{H-1}(-\rho\ln p_\psi(a^_t|z^_t)sg(V^\lambda_t - v_\xi(z^_t)) - (1-\rho)V^\lambda_t - \etaH[a_t|z^_t])]
-    def calcActorLoss(self):
-        pass
+    def calcActorLoss(self, feat, action, target, weight, mix = 0.5, ent_scale):
+        with torch.no_grad():
+            policy = self.actor(feat)
+        if self.config.actor_grad == 'dynamics':
+            objective = target
+        elif self.config.actor_grad == 'reinforce':
+            baseline = self.critic(feat[:-1]).mode()
+            with torch.no_grad():
+                advantage = target - baseline
+            objective = policy.log_prob(action)[:-1] * advantage
+        elif self.config.actor_grad == 'both':
+            baseline = self.critic(feat[:-1]).mode()
+            with torch.no_grad():
+                advantage = target - baseline
+            objective = policy.log_prob(action)[:-1] * advantage
+            # mix = common.schedule(self.config.actor_grad_mix, self.step)
+            objective = mix * target + (1 - mix) * objective
+        else:
+            raise NotImplementedError(self.config.actor_grad)
+        ent = policy.entropy()
+        # ent_scale = common.schedule(self.config.actor_ent, self.step)
+        objective += ent_scale * ent[:-1]
+        actor_loss = -(weight[:-1] * objective).mean()
+        return actor_loss
 
     #L(\xi) = E_p[\Sigma_{t=1}^{H-1}1/2(v_\xi(z^_t) - sg(V^\lambda_t)))^2]
-    def calcCriticLoss(self, states, actions, values, critic):
-        pass
+    def calcCriticLoss(self, feat, action, target, weight):
+        # _target = None
+        
+        dist = self.critic(feat)[:-1]
+        with torch.no_grad():
+            _target = target
+        critic_loss = -(dist.log_prob(_target) * weight[:-1]).mean()
+        return critic_loss
 
     #v_\xi
     def accumulateValue(self, states, rewards, discounts):
